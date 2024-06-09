@@ -1,2 +1,6 @@
 venv
 Dockerfile
+.gitignore
+docker-compose.yml
+.idea
+__pycache__
