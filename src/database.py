@@ -5,12 +5,13 @@ from src.config import settings
 print(settings.DATABASE_URL_asyncpg)
 
 engine = create_async_engine(
-    url=settings.DATABASE_URL_asyncpg
+    url=settings.DATABASE_URL_asyncpg,
+    echo=True
 )
 
 new_session = async_sessionmaker(
     bind=engine,
-    expire_on_commit=False
+    expire_on_commit=False,
 )
 
 
@@ -20,9 +21,9 @@ class Base(DeclarativeBase):
 
 async def create_tables():
     async with engine.begin() as conn:
-        conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 
 async def drop_tables():
     async with engine.begin() as conn:
-        conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.drop_all)
