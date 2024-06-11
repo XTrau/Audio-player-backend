@@ -1,5 +1,5 @@
 from fastapi import UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, BaseConfig
 
 
 class SArtistAdd(BaseModel):
@@ -28,17 +28,29 @@ class SArtist(BaseModel):
     name: str
     image_file_name: str | None = None
 
+    class Config(BaseConfig):
+        from_attributes = True
+
 
 class SAlbum(BaseModel):
+    id: int
     title: str
     image_file_name: str | None = None
+    artist_id: int
+
+    class Config(BaseConfig):
+        from_attributes = True
 
 
 class STrack(BaseModel):
+    id: int
     title: str
     audio_file_name: str
     image_file_name: str | None = None
     artists: list[SArtist]
+
+    class Config(BaseConfig):
+        from_attributes = True
 
 
 class SAlbumWithTracks(SAlbum):
