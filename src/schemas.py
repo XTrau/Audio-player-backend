@@ -57,6 +57,15 @@ class SAlbumWithTracks(SAlbum):
     tracks: list[STrack]
 
 
+class SAlbumWithArtist(SAlbum):
+    artist: SArtist
+
+
+class SAlbumWithArtistAndTracks(SAlbum):
+    artist: SArtist
+    tracks: list[STrack]
+
+
 class SArtistWithAlbums(SArtist):
     albums: list[SAlbum]
 
