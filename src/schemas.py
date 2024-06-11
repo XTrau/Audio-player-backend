@@ -1,53 +1,53 @@
-from fastapi import UploadFile
+from fastapi import UploadFile, File
 from pydantic import BaseModel
 
 
-class ArtistCreateModel(BaseModel):
+class SArtistAdd(BaseModel):
     name: str
-    image_file: UploadFile | None = None
+    image_file: UploadFile | None = File(None)
 
 
-class TrackCreateModel(BaseModel):
+class STrackAdd(BaseModel):
     title: str
     audio_file: UploadFile
-    image_file: UploadFile | None = None
+    image_file: UploadFile | None = File(None)
 
 
-class AlbumCreateModel(BaseModel):
+class SAlbumAdd(BaseModel):
     title: str
     artist_id: int
-    image_file: UploadFile | None = None
+    image_file: UploadFile | None = File(None)
 
 
-class AlbumWithTracksCreateModel(AlbumCreateModel):
-    tracks: list[TrackCreateModel]
+class SAlbumWithTracksAdd(SAlbumAdd):
+    tracks: list[STrackAdd]
 
 
-class ArtistModel(BaseModel):
+class SArtist(BaseModel):
     id: int
     name: str
     image_file_name: str | None = None
 
 
-class AlbumModel(BaseModel):
+class SAlbum(BaseModel):
     title: str
     image_file_name: str | None = None
 
 
-class TrackModel(BaseModel):
+class STrack(BaseModel):
     title: str
     audio_file_name: str
     image_file_name: str | None = None
-    artists: list[ArtistModel]
+    artists: list[SArtist]
 
 
-class AlbumWithTracksModel(AlbumModel):
-    tracks: list[TrackModel]
+class SAlbumWithTracks(SAlbum):
+    tracks: list[STrack]
 
 
-class ArtistWithAlbumsModel(ArtistModel):
-    albums: list[AlbumModel]
+class SArtistWithAlbums(SArtist):
+    albums: list[SAlbum]
 
 
-class ArtistWithAlbumsAndTracksModel(ArtistModel):
-    albums: list[AlbumWithTracksModel]
+class SArtistWithAlbumsAndTracks(SArtist):
+    albums: list[SAlbumWithTracks]
