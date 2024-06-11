@@ -1,7 +1,7 @@
 import os
 from uuid import uuid4
 
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException, UploadFile, status
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIRECTORY = os.path.join(BASE_DIR, "uploads")
@@ -16,7 +16,7 @@ def save_file(file: UploadFile | None, extensions: list[str]) -> str | None:
 
     file_extension = file.filename.split(".")[-1] in extensions
     if not file_extension:
-        raise HTTPException(status_code=400, detail="Invalid file type")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
 
     file_id = str(uuid4())
     file_name = f"{file_id}_{file.filename}"

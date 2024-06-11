@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, UploadFile, File, Depends
+from fastapi import APIRouter, Form, UploadFile, File, Depends, status
 from src.albums.repository import AlbumsRepository
 from src.schemas import SAlbumAdd, SAlbumWithArtist
 
@@ -13,7 +13,7 @@ async def get_artist_create_schema(
     return SAlbumAdd(title=title, artist_id=artist_id, image_file=image_file)
 
 
-@router.post('/')
+@router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_album(
         album: SAlbumAdd = Depends(get_artist_create_schema)
 ):
