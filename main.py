@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from src.database import drop_tables, create_tables
+
 from src.artists.router import router as artists_router
+from src.albums.router import router as album_router
 
 app = FastAPI()
 app.include_router(artists_router)
+app.include_router(album_router)
 
 
 @app.get("/")
