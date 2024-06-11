@@ -10,7 +10,10 @@ if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
 
-def save_file(file: UploadFile, extensions: list[str]) -> str:
+def save_file(file: UploadFile | None, extensions: list[str]) -> str | None :
+    if file is None:
+        return None
+
     file_extension = file.filename.split(".")[-1] in extensions
     if not file_extension:
         raise HTTPException(status_code=400, detail="Invalid file type")
