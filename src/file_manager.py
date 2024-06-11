@@ -10,7 +10,7 @@ if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
 
-def save_file(file: UploadFile | None, extensions: list[str]) -> str | None :
+def save_file(file: UploadFile | None, extensions: list[str]) -> str | None:
     if file is None:
         return None
 

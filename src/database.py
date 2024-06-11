@@ -2,8 +2,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from src.config import settings
 
-print(settings.DATABASE_URL_asyncpg)
-
 engine = create_async_engine(
     url=settings.DATABASE_URL_asyncpg,
     echo=True
