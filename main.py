@@ -1,12 +1,17 @@
 from fastapi import FastAPI
 from src.database import drop_tables, create_tables
+from src.artists.router import router as artists_router
 
 app = FastAPI()
+app.include_router(artists_router)
 
 
 @app.get("/")
 async def root():
-    await create_tables()
+    try:
+        await create_tables()
+    except Exception as e:
+        return {"error": "Failed connect to database"}
     return {"Server": "Working!"}
 
 
