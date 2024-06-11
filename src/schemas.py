@@ -9,6 +9,8 @@ class SArtistAdd(BaseModel):
 
 class STrackAdd(BaseModel):
     title: str
+    album_id: int | None = None
+    artist_ids: list[int]
     audio_file: UploadFile
     image_file: UploadFile | None = File(None)
 
