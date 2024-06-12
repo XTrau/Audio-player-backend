@@ -1,7 +1,7 @@
 import os
 from uuid import uuid4
 
-from fastapi import HTTPException, UploadFile, status
+from fastapi import HTTPException, UploadFile, status, File
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIRECTORY = os.path.join(BASE_DIR, "uploads")
@@ -31,3 +31,11 @@ def delete_file(file_name: str) -> None:
     file_path = os.path.join(UPLOAD_DIRECTORY, file_name)
     if os.path.exists(file_path):
         os.remove(file_path)
+
+
+def read_file(file_name: str) -> File:
+    file_path = os.path.join(UPLOAD_DIRECTORY, file_name)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='File not found')
+    file = File(file_path)
+    return file
