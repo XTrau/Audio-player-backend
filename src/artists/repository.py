@@ -12,7 +12,7 @@ class ArtistsRepository:
     @staticmethod
     async def create_artist(artist: SArtistAdd) -> int:
         async with new_session() as session:
-            img_file_name = save_file(artist.image_file, ['jpg', 'jpeg', 'png'], artist.name)
+            img_file_name = await save_file(artist.image_file, ['jpg', 'jpeg', 'png'], artist.name)
             artist_model = ArtistOrm(name=artist.name, image_file_name=img_file_name)
             session.add(artist_model)
             await session.flush()

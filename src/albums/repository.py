@@ -10,7 +10,7 @@ class AlbumsRepository:
     @staticmethod
     async def create_album(album: SAlbumAdd) -> int:
         async with new_session() as session:
-            image_file_name = save_file(album.image_file, ['jpg', 'jpeg', 'png'], album.title)
+            image_file_name = await save_file(album.image_file, ['jpg', 'jpeg', 'png'], album.title)
             album_model = AlbumOrm(
                 title=album.title,
                 artist_id=album.artist_id,

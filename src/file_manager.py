@@ -10,7 +10,7 @@ if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
 
-def save_file(file: UploadFile | None, extensions: list[str], title: str) -> str | None:
+async def save_file(file: UploadFile | None, extensions: list[str], title: str) -> str | None:
     if file is None:
         return None
 
@@ -27,13 +27,13 @@ def save_file(file: UploadFile | None, extensions: list[str], title: str) -> str
     return file_name
 
 
-def delete_file(file_name: str) -> None:
+async def delete_file(file_name: str) -> None:
     file_path = os.path.join(UPLOAD_DIRECTORY, file_name)
     if os.path.exists(file_path):
         os.remove(file_path)
 
 
-def read_file(file_name: str) -> File:
+async def read_file(file_name: str) -> File:
     file_path = os.path.join(UPLOAD_DIRECTORY, file_name)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='File not found')

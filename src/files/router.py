@@ -7,5 +7,5 @@ router = APIRouter(prefix='/files', tags=['Files'])
 
 @router.get('/{file_name}')
 async def get_file(file_name: str) -> FileResponse:
-    file = read_file(file_name)
+    file = await read_file(file_name)
     return FileResponse(file.default)
