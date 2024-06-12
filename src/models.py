@@ -11,6 +11,10 @@ class ArtistOrm(Base):
     image_file_name: Mapped[str | None]
 
     albums: Mapped[list["AlbumOrm"]] = relationship(back_populates="artist")
+    tracks: Mapped[list["TrackOrm"]] = relationship(
+        back_populates="artists",
+        secondary="artists_tracks"
+    )
 
 
 class AlbumOrm(Base):
@@ -25,6 +29,13 @@ class AlbumOrm(Base):
     tracks: Mapped[list["TrackOrm"]] = relationship(back_populates="album")
 
 
+class ArtistTrackOrm(Base):
+    __tablename__ = 'artists_tracks'
+
+    artist_id: Mapped[int] = mapped_column(ForeignKey('artists.id'), primary_key=True)
+    track_id: Mapped[int] = mapped_column(ForeignKey('artists.id'), primary_key=True)
+
+
 class TrackOrm(Base):
     __tablename__ = 'tracks'
 
@@ -35,3 +46,7 @@ class TrackOrm(Base):
     album_id: Mapped[int] = mapped_column(ForeignKey('albums.id'))
 
     album: Mapped["AlbumOrm"] = relationship(back_populates="tracks")
+    artists: Mapped[list["ArtistOrm"]] = relationship(
+        back_populates="tracks",
+        secondary="artists_tracks"
+    )
