@@ -33,12 +33,12 @@ class AlbumsRepository:
             return album_models
 
     @staticmethod
-    async def get_album(artist_id: int) -> AlbumOrm:
+    async def get_album(album_id: int) -> AlbumOrm:
         async with new_session() as session:
             query = (
                 select(AlbumOrm)
                 .options(joinedload(AlbumOrm.artist))
-                .where(AlbumOrm.artist_id == artist_id)
+                .where(AlbumOrm.id == album_id)
             )
             res = await session.execute(query)
             album_models = res.unique().scalars().first()
