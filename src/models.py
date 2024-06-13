@@ -33,7 +33,7 @@ class ArtistTrackOrm(Base):
     __tablename__ = 'artists_tracks'
 
     artist_id: Mapped[int] = mapped_column(ForeignKey('artists.id'), primary_key=True)
-    track_id: Mapped[int] = mapped_column(ForeignKey('artists.id'), primary_key=True)
+    track_id: Mapped[int] = mapped_column(ForeignKey('tracks.id'), primary_key=True)
 
 
 class TrackOrm(Base):
