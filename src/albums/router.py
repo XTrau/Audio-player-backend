@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, UploadFile, File, Depends, status
+from fastapi import APIRouter, Form, UploadFile, File, Depends, status, HTTPException
 from src.albums.repository import AlbumsRepository
 from src.schemas import SAlbumAdd, SAlbumWithArtist
 
@@ -31,5 +31,7 @@ async def get_albums() -> list[SAlbumWithArtist]:
 @router.get('/{artist_id}')
 async def get_album(artist_id: int) -> SAlbumWithArtist | None:
     album_model = await AlbumsRepository.get_album(artist_id)
+    if album_model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Track not found")
     album_schema = SAlbumWithArtist.from_orm(album_model)
     return album_schema

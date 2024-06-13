@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, File, UploadFile, Depends, status, Body
+from fastapi import APIRouter, Form, File, UploadFile, Depends, status, Body, HTTPException
 from src.schemas import STrack, STrackAdd, STrackWithAlbum
 from src.tracks.repository import TracksRepository
 
@@ -44,5 +44,7 @@ async def get_tracks() -> list[STrackWithAlbum]:
 @router.get("/{track_id}")
 async def get_track(track_id: int) -> STrackWithAlbum:
     track_model = await TracksRepository.get_track(track_id)
+    if track_model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Track not found")
     track_schema = STrackWithAlbum.from_orm(track_model)
     return track_schema
