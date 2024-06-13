@@ -55,6 +55,10 @@ class STrack(BaseModel):
         from_attributes = True
 
 
+class STrackWithAlbum(STrack):
+    album: SAlbum
+
+
 class SAlbumWithTracks(SAlbum):
     tracks: list[STrack]
 
