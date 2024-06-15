@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 
 from src.database import new_session
 from src.models import ArtistOrm, TrackOrm
@@ -26,7 +26,10 @@ class ArtistsRepository:
                 select(ArtistOrm)
                 .options(
                     selectinload(ArtistOrm.albums),
-                    selectinload(ArtistOrm.tracks).selectinload(TrackOrm.artists)
+                    selectinload(ArtistOrm.tracks).options(
+                        selectinload(TrackOrm.artists),
+                        joinedload(TrackOrm.album)
+                    )
                 )
             )
             res = await session.execute(query)
@@ -40,7 +43,10 @@ class ArtistsRepository:
                 select(ArtistOrm)
                 .options(
                     selectinload(ArtistOrm.albums),
-                    selectinload(ArtistOrm.tracks)
+                    selectinload(ArtistOrm.tracks).options(
+                        selectinload(TrackOrm.artists),
+                        joinedload(TrackOrm.album)
+                    )
                 )
                 .where(ArtistOrm.id == artist_id)
             )
