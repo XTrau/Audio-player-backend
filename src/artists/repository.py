@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from src.database import new_session
-from src.models import ArtistOrm
+from src.models import ArtistOrm, TrackOrm
 from src.schemas import SArtistAdd
 from src.file_manager import save_file
 
@@ -24,7 +24,10 @@ class ArtistsRepository:
         async with new_session() as session:
             query = (
                 select(ArtistOrm)
-                .options(selectinload(ArtistOrm.albums))
+                .options(
+                    selectinload(ArtistOrm.albums),
+                    selectinload(ArtistOrm.tracks).selectinload(TrackOrm.artists)
+                )
             )
             res = await session.execute(query)
             artists = res.unique().scalars().all()
@@ -35,7 +38,10 @@ class ArtistsRepository:
         async with new_session() as session:
             query = (
                 select(ArtistOrm)
-                .options(selectinload(ArtistOrm.albums))
+                .options(
+                    selectinload(ArtistOrm.albums),
+                    selectinload(ArtistOrm.tracks)
+                )
                 .where(ArtistOrm.id == artist_id)
             )
             res = await session.execute(query)

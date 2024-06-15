@@ -1,8 +1,8 @@
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from src.database import new_session
 from src.schemas import SAlbumAdd
-from src.models import AlbumOrm
+from src.models import AlbumOrm, TrackOrm
 from src.file_manager import save_file
 
 
@@ -26,7 +26,10 @@ class AlbumsRepository:
         async with new_session() as session:
             query = (
                 select(AlbumOrm)
-                .options(joinedload(AlbumOrm.artist))
+                .options(
+                    joinedload(AlbumOrm.artist),
+                    selectinload(AlbumOrm.tracks).selectinload(TrackOrm.artists)
+                )
             )
             res = await session.execute(query)
             album_models = res.unique().scalars().all()
@@ -37,7 +40,10 @@ class AlbumsRepository:
         async with new_session() as session:
             query = (
                 select(AlbumOrm)
-                .options(joinedload(AlbumOrm.artist))
+                .options(
+                    joinedload(AlbumOrm.artist),
+                    selectinload(AlbumOrm.tracks).selectinload(TrackOrm.artists)
+                )
                 .where(AlbumOrm.id == album_id)
             )
             res = await session.execute(query)

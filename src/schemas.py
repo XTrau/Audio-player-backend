@@ -7,6 +7,12 @@ class SArtistAdd(BaseModel):
     image_file: UploadFile | None = File(None)
 
 
+class SAlbumAdd(BaseModel):
+    title: str
+    artist_id: int
+    image_file: UploadFile | None = File(None)
+
+
 class STrackAdd(BaseModel):
     title: str
     album_id: int | None = None
@@ -15,17 +21,7 @@ class STrackAdd(BaseModel):
     image_file: UploadFile | None = File(None)
 
 
-class SAlbumAdd(BaseModel):
-    title: str
-    artist_id: int
-    image_file: UploadFile | None = File(None)
-
-
-class SAlbumWithTracksAdd(SAlbumAdd):
-    tracks: list[STrackAdd]
-
-
-class SArtist(BaseModel):
+class SArtistBase(BaseModel):
     id: int
     name: str
     image_file_name: str | None = None
@@ -34,7 +30,7 @@ class SArtist(BaseModel):
         from_attributes = True
 
 
-class SAlbum(BaseModel):
+class SAlbumBase(BaseModel):
     id: int
     title: str
     image_file_name: str | None = None
@@ -44,37 +40,27 @@ class SAlbum(BaseModel):
         from_attributes = True
 
 
-class STrack(BaseModel):
+class STrackBase(BaseModel):
     id: int
     title: str
     audio_file_name: str
     image_file_name: str | None = None
-    artists: list[SArtist]
+
+    artists: list[SArtistBase]
 
     class Config(BaseConfig):
         from_attributes = True
 
 
-class STrackWithAlbum(STrack):
-    album: SAlbum
+class STrack(STrackBase):
+    album: SAlbumBase | None = None
 
 
-class SAlbumWithTracks(SAlbum):
+class SArtist(SArtistBase):
+    albums: list[SAlbumBase]
     tracks: list[STrack]
 
 
-class SAlbumWithArtist(SAlbum):
-    artist: SArtist
-
-
-class SAlbumWithArtistAndTracks(SAlbum):
-    artist: SArtist
-    tracks: list[STrack]
-
-
-class SArtistWithAlbums(SArtist):
-    albums: list[SAlbum]
-
-
-class SArtistWithAlbumsAndTracks(SArtist):
-    albums: list[SAlbumWithTracks]
+class SAlbum(SAlbumBase):
+    artist: SArtistBase | None = None
+    tracks: list[STrackBase]
