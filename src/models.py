@@ -43,7 +43,7 @@ class TrackOrm(Base):
     title: Mapped[str]
     audio_file_name: Mapped[str]
     image_file_name: Mapped[str | None]
-    album_id: Mapped[int] = mapped_column(ForeignKey('albums.id'))
+    album_id: Mapped[int | None] = mapped_column(ForeignKey('albums.id'))
 
     album: Mapped["AlbumOrm"] = relationship(back_populates="tracks")
     artists: Mapped[list["ArtistOrm"]] = relationship(
