@@ -22,7 +22,7 @@ class AlbumOrm(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
-    artist_id: Mapped[int] = mapped_column(ForeignKey('artists.id'))
+    artist_id: Mapped[int] = mapped_column(ForeignKey('artists.id', ondelete="CASCADE"))
     image_file_name: Mapped[str | None]
 
     artist: Mapped["ArtistOrm"] = relationship(back_populates="albums", overlaps="albums")
@@ -32,8 +32,8 @@ class AlbumOrm(Base):
 class ArtistTrackOrm(Base):
     __tablename__ = 'artists_tracks'
 
-    artist_id: Mapped[int] = mapped_column(ForeignKey('artists.id'), primary_key=True)
-    track_id: Mapped[int] = mapped_column(ForeignKey('tracks.id'), primary_key=True)
+    artist_id: Mapped[int] = mapped_column(ForeignKey('artists.id', ondelete="CASCADE"), primary_key=True)
+    track_id: Mapped[int] = mapped_column(ForeignKey('tracks.id', ondelete="CASCADE"), primary_key=True)
 
 
 class TrackOrm(Base):
@@ -43,7 +43,7 @@ class TrackOrm(Base):
     title: Mapped[str]
     audio_file_name: Mapped[str]
     image_file_name: Mapped[str | None]
-    album_id: Mapped[int | None] = mapped_column(ForeignKey('albums.id'))
+    album_id: Mapped[int | None] = mapped_column(ForeignKey('albums.id', ondelete="CASCADE"))
 
     album: Mapped["AlbumOrm"] = relationship(back_populates="tracks")
     artists: Mapped[list["ArtistOrm"]] = relationship(
