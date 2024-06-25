@@ -9,7 +9,7 @@ from src.file_manager import save_file
 
 class TracksRepository:
     @staticmethod
-    async def get_tracks() -> list[TrackOrm]:
+    async def get_tracks(page: int, size: int) -> list[TrackOrm]:
         async with new_session() as session:
             query = (
                 select(TrackOrm)
@@ -17,6 +17,8 @@ class TracksRepository:
                     joinedload(TrackOrm.album),
                     selectinload(TrackOrm.artists)
                 )
+                .limit(size)
+                .offset(page * size)
             )
             res = await session.execute(query)
             track_models = res.unique().scalars().all()

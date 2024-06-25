@@ -20,7 +20,7 @@ class ArtistsRepository:
             return artist_model.id
 
     @staticmethod
-    async def get_artists() -> list[ArtistOrm]:
+    async def get_artists(page: int, size: int) -> list[ArtistOrm]:
         async with new_session() as session:
             query = (
                 select(ArtistOrm)
@@ -31,6 +31,8 @@ class ArtistsRepository:
                         joinedload(TrackOrm.album)
                     )
                 )
+                .limit(size)
+                .offset(page * size)
             )
             res = await session.execute(query)
             artists = res.unique().scalars().all()

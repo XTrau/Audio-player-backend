@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, Depends, Form, UploadFile, File, HTTPException, status, Query
 from src.artists.repository import ArtistsRepository
 from src.schemas import SArtistAdd, SArtist
 
@@ -19,8 +19,11 @@ async def create_artist(artist: SArtistAdd = Depends(get_artist_create_schema)):
 
 
 @router.get("/", response_model=list[SArtist])
-async def get_artists():
-    artist_models = await ArtistsRepository.get_artists()
+async def get_artists(
+        page: int = Query(0, ge=0),
+        size: int = Query(10, ge=1, le=20),
+):
+    artist_models = await ArtistsRepository.get_artists(page, size)
     artist_schemas = [SArtist.from_orm(artist_model) for artist_model in artist_models]
     return artist_schemas
 

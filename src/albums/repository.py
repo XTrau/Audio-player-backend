@@ -22,7 +22,7 @@ class AlbumsRepository:
             return album_model.id
 
     @staticmethod
-    async def get_albums() -> list[AlbumOrm]:
+    async def get_albums(page: int, size: int) -> list[AlbumOrm]:
         async with new_session() as session:
             query = (
                 select(AlbumOrm)
@@ -30,6 +30,8 @@ class AlbumsRepository:
                     joinedload(AlbumOrm.artist),
                     selectinload(AlbumOrm.tracks).selectinload(TrackOrm.artists)
                 )
+                .limit(size)
+                .offset(page * size)
             )
             res = await session.execute(query)
             album_models = res.unique().scalars().all()

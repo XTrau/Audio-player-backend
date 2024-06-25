@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, UploadFile, File, Depends, status, HTTPException
+from fastapi import APIRouter, Form, UploadFile, File, Depends, status, HTTPException, Query
 from src.albums.repository import AlbumsRepository
 from src.schemas import SAlbumAdd, SAlbum
 
@@ -22,8 +22,11 @@ async def create_album(
 
 
 @router.get('/', response_model=list[SAlbum])
-async def get_albums():
-    album_models = await AlbumsRepository.get_albums()
+async def get_albums(
+        page: int = Query(0, ge=0),
+        size: int = Query(10, ge=1, le=20),
+):
+    album_models = await AlbumsRepository.get_albums(page, size)
     album_schemas = [SAlbum.from_orm(album_model) for album_model in album_models]
     return album_schemas
 
