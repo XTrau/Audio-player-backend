@@ -27,7 +27,9 @@ async def save_file(file: UploadFile | None, extensions: list[str], title: str) 
     return file_name
 
 
-async def delete_file(file_name: str) -> None:
+async def delete_file(file_name: str | None) -> None:
+    if file_name is None:
+        return None
     file_path = os.path.join(UPLOAD_DIRECTORY, file_name)
     if os.path.exists(file_path):
         os.remove(file_path)
