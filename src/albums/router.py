@@ -5,7 +5,7 @@ from src.schemas import SAlbumAdd, SAlbum
 router = APIRouter(prefix='/albums', tags=['Albums'])
 
 
-async def get_artist_create_schema(
+async def get_album_create_schema(
         title: str = Form(),
         artist_id: int = Form(),
         image_file: UploadFile = File(None)
@@ -15,7 +15,7 @@ async def get_artist_create_schema(
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_album(
-        album: SAlbumAdd = Depends(get_artist_create_schema)
+        album: SAlbumAdd = Depends(get_album_create_schema)
 ):
     album_id = await AlbumsRepository.create_album(album)
     return {"ok": True, "album_id": album_id}
@@ -33,6 +33,19 @@ async def get_albums(
 
 @router.get('/{album_id}', response_model=SAlbum)
 async def get_album(album_id: int):
+    album_model = await AlbumsRepository.get_album(album_id)
+    if album_model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Track not found")
+    album_schema = SAlbum.from_orm(album_model)
+    return album_schema
+
+
+@router.put('/{album_id}', response_model=SAlbum)
+async def update_album(
+        album_id: int,
+        album: SAlbumAdd = Depends(get_album_create_schema)
+):
+    await AlbumsRepository.update_album(album_id, album)
     album_model = await AlbumsRepository.get_album(album_id)
     if album_model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Track not found")

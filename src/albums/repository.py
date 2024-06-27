@@ -1,9 +1,12 @@
-from sqlalchemy import select
+from fastapi import HTTPException
+from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload, selectinload
+from starlette import status
+
 from src.database import new_session
 from src.schemas import SAlbumAdd
 from src.models import AlbumOrm, TrackOrm
-from src.file_manager import save_file
+from src.file_manager import save_file, delete_file
 
 
 class AlbumsRepository:
@@ -51,3 +54,30 @@ class AlbumsRepository:
             res = await session.execute(query)
             album_models = res.unique().scalars().first()
             return album_models
+
+    @staticmethod
+    async def update_album(
+            album_id: int,
+            album: SAlbumAdd
+    ):
+        async with new_session() as session:
+            query = (
+                select(AlbumOrm)
+                .where(AlbumOrm.id == album_id)
+            )
+
+            res = await session.execute(query)
+            old_album = res.scalar()
+            if old_album is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Album not found')
+
+            await delete_file(old_album.image_file_name)
+
+            image_file_name = await save_file(album.image_file, ['jpg', 'jpeg', 'png'], album.title)
+            stmt = (
+                update(AlbumOrm).where(AlbumOrm.id == album_id)
+                .values(title=album.title, artist_id=album.artist_id, image_file_name=image_file_name)
+            )
+
+            await session.execute(stmt)
+            await session.commit()
