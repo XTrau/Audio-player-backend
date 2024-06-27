@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Form, File, UploadFile, Depends, status, Query, HTTPException, Path
 from src.schemas import STrack, STrackAdd
 from src.tracks.repository import TracksRepository
@@ -49,6 +47,18 @@ async def get_tracks(
 @router.get("/{track_id}", response_model=STrack)
 async def get_track(track_id: int):
     track_model = await TracksRepository.get_track(track_id)
+    if track_model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Track not found")
+    track_schema = STrack.from_orm(track_model)
+    return track_schema
+
+
+@router.put("/{track_id}", response_model=STrack)
+async def update_track(
+        track_id: int,
+        track: STrackAdd = Depends(get_track_create_schema)
+):
+    track_model = await TracksRepository.update_track(track_id, track)
     if track_model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Track not found")
     track_schema = STrack.from_orm(track_model)
