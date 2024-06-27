@@ -35,3 +35,15 @@ async def get_artist(artist_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
     artist_schema = SArtist.from_orm(artist_model)
     return artist_schema
+
+
+@router.put("/{artist_id}", response_model=SArtist)
+async def update_artist(
+        artist_id: int,
+        artist: SArtistAdd = Depends(get_artist_create_schema),
+):
+    artist_model = await ArtistsRepository.update_artist(artist_id, artist)
+    if artist_model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
+    artist_schema = SArtist.from_orm(artist_model)
+    return artist_schema
