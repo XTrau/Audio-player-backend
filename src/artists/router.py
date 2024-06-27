@@ -42,7 +42,8 @@ async def update_artist(
         artist_id: int,
         artist: SArtistAdd = Depends(get_artist_create_schema),
 ):
-    artist_model = await ArtistsRepository.update_artist(artist_id, artist)
+    await ArtistsRepository.update_artist(artist_id, artist)
+    artist_model = await ArtistsRepository.get_artist(artist_id)
     if artist_model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
     artist_schema = SArtist.from_orm(artist_model)

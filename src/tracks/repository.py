@@ -84,11 +84,6 @@ class TracksRepository:
             audio_file_name = await save_file(track.audio_file, ["mp3", "wav"], track.title)
             image_file_name = await save_file(track.image_file, ["jpg", "jpeg", "png"], track.title)
 
-            artist_track_models = [
-                ArtistTrackOrm(artist_id=artist_id, track_id=track_id)
-                for artist_id in track.artist_ids
-            ]
-
             stmt = (
                 update(TrackOrm).where(TrackOrm.id == track_id)
                 .values(
@@ -99,22 +94,14 @@ class TracksRepository:
                 )
             )
             await session.execute(stmt)
+
             stmt = (delete(ArtistTrackOrm).where(ArtistTrackOrm.track_id == track_id))
             await session.execute(stmt)
+
+            artist_track_models = [
+                ArtistTrackOrm(artist_id=artist_id, track_id=track_id)
+                for artist_id in track.artist_ids
+            ]
+
             session.add_all(artist_track_models)
-
-            await session.flush()
-
-            query = (
-                select(TrackOrm)
-                .where(TrackOrm.id == track_id)
-                .options(
-                    joinedload(TrackOrm.album),
-                    selectinload(TrackOrm.artists)
-                )
-            )
-            res = await session.execute(query)
-            track_model = res.unique().scalars().first()
-
             await session.commit()
-            return track_model

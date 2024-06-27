@@ -85,18 +85,3 @@ class ArtistsRepository:
 
             await session.execute(stmt)
             await session.commit()
-
-            query = (
-                select(ArtistOrm)
-                .options(
-                    selectinload(ArtistOrm.albums),
-                    selectinload(ArtistOrm.tracks).options(
-                        selectinload(TrackOrm.artists),
-                        joinedload(TrackOrm.album)
-                    )
-                )
-                .where(ArtistOrm.id == artist_id)
-            )
-            res = await session.execute(query)
-            artist_model = res.unique().scalar()
-            return artist_model

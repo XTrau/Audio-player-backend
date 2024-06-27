@@ -58,7 +58,8 @@ async def update_track(
         track_id: int,
         track: STrackAdd = Depends(get_track_create_schema)
 ):
-    track_model = await TracksRepository.update_track(track_id, track)
+    await TracksRepository.update_track(track_id, track)
+    track_model = await TracksRepository.get_track(track_id)
     if track_model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Track not found")
     track_schema = STrack.from_orm(track_model)
