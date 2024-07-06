@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, UploadFile, File, HTTPException, status, Query
+from fastapi import APIRouter, Depends, Form, UploadFile, File, HTTPException, status, Query, Body
 from src.artists.repository import ArtistsRepository
 from src.schemas import SArtistAdd, SArtist
 
@@ -7,7 +7,7 @@ router = APIRouter(prefix='/artists', tags=['Artists'])
 
 async def get_artist_create_schema(
         name: str = Form(),
-        image_file: UploadFile = File(None),
+        image_file: UploadFile | None = File(default=None),
 ) -> SArtistAdd:
     return SArtistAdd(name=name, image_file=image_file)
 

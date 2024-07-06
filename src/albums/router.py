@@ -8,7 +8,7 @@ router = APIRouter(prefix='/albums', tags=['Albums'])
 async def get_album_create_schema(
         title: str = Form(),
         artist_id: int = Form(),
-        image_file: UploadFile = File(None)
+        image_file: UploadFile | None = File(default=None)
 ):
     return SAlbumAdd(title=title, artist_id=artist_id, image_file=image_file)
 
