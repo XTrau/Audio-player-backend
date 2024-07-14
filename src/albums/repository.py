@@ -5,8 +5,10 @@ from starlette import status
 
 from src.database import new_session
 from src.schemas import SAlbumAdd
-from src.models import AlbumOrm, TrackOrm
 from src.file_manager import save_file, delete_file
+
+from src.albums.models import AlbumOrm
+from src.tracks.models import TrackOrm
 
 
 class AlbumsRepository:

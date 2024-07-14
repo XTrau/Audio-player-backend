@@ -4,9 +4,11 @@ from sqlalchemy.orm import selectinload, joinedload
 from starlette import status
 
 from src.database import new_session
-from src.models import TrackOrm, ArtistTrackOrm
 from src.schemas import STrackAdd
 from src.file_manager import save_file, delete_file
+
+from src.models import ArtistTrackOrm
+from src.tracks.models import TrackOrm
 
 
 class TracksRepository:
