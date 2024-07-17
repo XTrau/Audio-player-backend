@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from src.file_manager import read_file
 from starlette.responses import FileResponse
 

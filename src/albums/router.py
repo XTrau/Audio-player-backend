@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Form, UploadFile, File, Depends, status, HTTPException, Query
 from src.albums.repository import AlbumsRepository
-from src.schemas import SAlbumAdd, SAlbum
+from src.schemas import Pagination
+from src.albums.schemas import SAlbumAdd, SAlbum
 
 router = APIRouter(prefix='/albums', tags=['Albums'])
 
@@ -13,7 +14,7 @@ async def get_album_create_schema(
     return SAlbumAdd(title=title, artist_id=artist_id, image_file=image_file)
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router.post('', status_code=status.HTTP_201_CREATED)
 async def create_album(
         album: SAlbumAdd = Depends(get_album_create_schema)
 ):
@@ -21,12 +22,9 @@ async def create_album(
     return {"ok": True, "album_id": album_id}
 
 
-@router.get('/', response_model=list[SAlbum])
-async def get_albums(
-        page: int = Query(0, ge=0),
-        size: int = Query(10, ge=1, le=20),
-):
-    album_models = await AlbumsRepository.get_albums(page, size)
+@router.get('', response_model=list[SAlbum])
+async def get_albums(pagination: Pagination = Depends()):
+    album_models = await AlbumsRepository.get_albums(pagination.page, pagination.size)
     album_schemas = [SAlbum.from_orm(album_model) for album_model in album_models]
     return album_schemas
 

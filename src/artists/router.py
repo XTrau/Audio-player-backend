@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, Form, UploadFile, File, HTTPException, status, Query, Body
 from src.artists.repository import ArtistsRepository
-from src.schemas import SArtistAdd, SArtist
+from src.schemas import Pagination
+
+from src.artists.schemas import SArtistAdd, SArtist
 
 router = APIRouter(prefix='/artists', tags=['Artists'])
 
@@ -12,18 +14,15 @@ async def get_artist_create_schema(
     return SArtistAdd(name=name, image_file=image_file)
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_artist(artist: SArtistAdd = Depends(get_artist_create_schema)):
     artist_id = await ArtistsRepository.create_artist(artist)
     return {"ok": True, "artist_id": artist_id}
 
 
-@router.get("/", response_model=list[SArtist])
-async def get_artists(
-        page: int = Query(0, ge=0),
-        size: int = Query(10, ge=1, le=20),
-):
-    artist_models = await ArtistsRepository.get_artists(page, size)
+@router.get("", response_model=list[SArtist])
+async def get_artists(pagination: Pagination = Depends()):
+    artist_models = await ArtistsRepository.get_artists(pagination.page, pagination.size)
     artist_schemas = [SArtist.from_orm(artist_model) for artist_model in artist_models]
     return artist_schemas
 
