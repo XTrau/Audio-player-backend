@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Form, File, UploadFile, Depends, status, Query, HTTPException, Path
-from src.schemas import Pagination
+from src.schemas import STrack, STrackAdd
 from src.tracks.repository import TracksRepository
-
-from src.tracks.schemas import STrack, STrackAdd
 
 router = APIRouter(prefix='/tracks', tags=['Tracks'])
 
@@ -30,15 +28,18 @@ async def get_track_create_schema(
     )
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_track(track: STrackAdd = Depends(get_track_create_schema)):
     track_id = await TracksRepository.create_track(track)
     return {"ok": True, "track_id": track_id}
 
 
-@router.get("", response_model=list[STrack])
-async def get_tracks(pagination: Pagination = Depends()):
-    track_models = await TracksRepository.get_tracks(pagination.page, pagination.size)
+@router.get("/", response_model=list[STrack])
+async def get_tracks(
+        page: int = Query(0, ge=0),
+        size: int = Query(10, ge=1, le=20),
+):
+    track_models = await TracksRepository.get_tracks(page, size)
     track_schemas = [STrack.from_orm(track_model) for track_model in track_models]
     return track_schemas
 
