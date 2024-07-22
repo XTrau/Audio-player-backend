@@ -13,7 +13,10 @@ from src.tracks.models import TrackOrm
 
 class TracksRepository:
     @staticmethod
-    async def get_tracks(page: int, size: int) -> list[TrackOrm]:
+    async def get_tracks(
+            page: int,
+            size: int,
+    ) -> list[TrackOrm]:
         async with new_session() as session:
             query = (
                 select(TrackOrm)

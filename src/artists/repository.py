@@ -12,7 +12,6 @@ from src.tracks.models import TrackOrm
 
 
 class ArtistsRepository:
-
     @staticmethod
     async def create_artist(artist: SArtistAdd) -> int:
         async with new_session() as session:

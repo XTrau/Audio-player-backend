@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,10 +10,10 @@ from src.tracks.router import router as tracks_router
 from src.files.router import router as file_router
 
 app = FastAPI()
-app.include_router(artists_router, prefix='/api')
-app.include_router(albums_router, prefix='/api')
-app.include_router(tracks_router, prefix='/api')
-app.include_router(file_router)
+app.include_router(artists_router)
+app.include_router(albums_router)
+app.include_router(tracks_router)
+app.include_router(file_router, prefix='/files')
 
 origins = [
     "http://localhost",
@@ -39,7 +40,6 @@ allow_headers = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=allow_headers
 )
@@ -59,3 +59,7 @@ async def reset_database():
     await drop_tables()
     await create_tables()
     return {"msg": "Database reset!"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

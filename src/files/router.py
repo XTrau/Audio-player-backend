@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from src.file_manager import read_file
 from starlette.responses import FileResponse
 
-router = APIRouter(prefix='/files', tags=['Files'])
+router = APIRouter(tags=['Files'])
 
 
 @router.get('/{file_name}')
