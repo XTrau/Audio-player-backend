@@ -13,7 +13,7 @@ app = FastAPI()
 app.include_router(artists_router)
 app.include_router(albums_router)
 app.include_router(tracks_router)
-app.include_router(file_router, prefix='/files')
+app.include_router(file_router, prefix="/files")
 
 origins = [
     "http://localhost",
@@ -34,14 +34,14 @@ allow_headers = [
     "Keep-Alive",
     "X-Requested-With",
     "If-Modified-Since",
-    "X-CSRF-Token"
+    "X-CSRF-Token",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allow_headers=allow_headers
+    allow_headers=allow_headers,
 )
 
 

@@ -15,7 +15,9 @@ class ArtistsRepository:
     @staticmethod
     async def create_artist(artist: SArtistAdd) -> int:
         async with new_session() as session:
-            img_file_name = await save_file(artist.image_file, ['jpg', 'jpeg', 'png'], artist.name)
+            img_file_name = await save_file(
+                artist.image_file, ["jpg", "jpeg", "png"], artist.name
+            )
             artist_model = ArtistOrm(name=artist.name, image_file_name=img_file_name)
             session.add(artist_model)
             await session.flush()
@@ -30,9 +32,8 @@ class ArtistsRepository:
                 .options(
                     selectinload(ArtistOrm.albums),
                     selectinload(ArtistOrm.tracks).options(
-                        selectinload(TrackOrm.artists),
-                        joinedload(TrackOrm.album)
-                    )
+                        selectinload(TrackOrm.artists), joinedload(TrackOrm.album)
+                    ),
                 )
                 .limit(size)
                 .offset(page * size)
@@ -49,9 +50,8 @@ class ArtistsRepository:
                 .options(
                     selectinload(ArtistOrm.albums),
                     selectinload(ArtistOrm.tracks).options(
-                        selectinload(TrackOrm.artists),
-                        joinedload(TrackOrm.album)
-                    )
+                        selectinload(TrackOrm.artists), joinedload(TrackOrm.album)
+                    ),
                 )
                 .where(ArtistOrm.id == artist_id)
             )
@@ -62,26 +62,25 @@ class ArtistsRepository:
     @staticmethod
     async def update_artist(artist_id: int, artist: SArtistAdd) -> ArtistOrm | None:
         async with new_session() as session:
-            query = (
-                select(ArtistOrm)
-                .where(ArtistOrm.id == artist_id)
-            )
+            query = select(ArtistOrm).where(ArtistOrm.id == artist_id)
 
             res = await session.execute(query)
             old_artist = res.scalar()
             if old_artist is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found"
+                )
 
             await delete_file(old_artist.image_file_name)
 
-            image_file_name = await save_file(artist.image_file, ['jpg', 'jpeg', 'png'], artist.name)
+            image_file_name = await save_file(
+                artist.image_file, ["jpg", "jpeg", "png"], artist.name
+            )
 
             stmt = (
-                update(ArtistOrm).where(ArtistOrm.id == artist_id)
-                .values(
-                    name=artist.name,
-                    image_file_name=image_file_name
-                )
+                update(ArtistOrm)
+                .where(ArtistOrm.id == artist_id)
+                .values(name=artist.name, image_file_name=image_file_name)
             )
 
             await session.execute(stmt)
