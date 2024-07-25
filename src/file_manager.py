@@ -2,8 +2,8 @@ import os
 from uuid import uuid4
 
 from fastapi import HTTPException, UploadFile, status, File
+from src.config import BASE_DIR
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIRECTORY = os.path.join(BASE_DIR, "uploads")
 
 if not os.path.exists(UPLOAD_DIRECTORY):

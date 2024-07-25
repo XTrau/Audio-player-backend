@@ -4,12 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.database import drop_tables, create_tables
 
+
+from src.auth.router import router as auth_router
 from src.artists.router import router as artists_router
 from src.albums.router import router as albums_router
 from src.tracks.router import router as tracks_router
 from src.files.router import router as file_router
 
 app = FastAPI()
+
+app.include_router(auth_router)
 app.include_router(artists_router)
 app.include_router(albums_router)
 app.include_router(tracks_router)
