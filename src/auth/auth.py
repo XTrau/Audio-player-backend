@@ -2,16 +2,16 @@ import jwt
 from fastapi import Depends, Request, HTTPException, Response, status
 from passlib.context import CryptContext
 
-from src.auth.schemas import SUserInDB, SUser
-from src.auth.repository import UserRepository
-from src.auth.jwt import (
+from auth.schemas import SUserInDB, SUser
+from auth.repository import UserRepository
+from auth.jwt import (
     create_access_token,
     decode_jwt,
 )
 
 from jwt.exceptions import ExpiredSignatureError
 
-from src.config import settings
+from config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated=["auto"])
 

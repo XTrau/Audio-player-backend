@@ -8,8 +8,8 @@ from fastapi import (
     HTTPException,
     Query,
 )
-from src.albums.repository import AlbumsRepository
-from src.schemas import SAlbumAdd, SAlbum
+from albums.repository import AlbumsRepository
+from schemas import SAlbumAdd, SAlbum
 
 router = APIRouter(prefix="/albums", tags=["Albums"])
 

@@ -2,7 +2,7 @@ import os
 from uuid import uuid4
 
 from fastapi import HTTPException, UploadFile, status, File
-from src.config import BASE_DIR
+from config import BASE_DIR
 
 UPLOAD_DIRECTORY = os.path.join(BASE_DIR, "uploads")
 

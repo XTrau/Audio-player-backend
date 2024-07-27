@@ -8,8 +8,8 @@ from fastapi import (
     Query,
     HTTPException,
 )
-from src.schemas import STrack, STrackAdd
-from src.tracks.repository import TracksRepository
+from schemas import STrack, STrackAdd
+from tracks.repository import TracksRepository
 
 router = APIRouter(prefix="/tracks", tags=["Tracks"])
 

@@ -1,7 +1,7 @@
 from sqlalchemy import select
-from src.auth.models import UserOrm
-from src.auth.schemas import SUserCreate
-from src.database import new_session
+from auth.models import UserOrm
+from auth.schemas import SUserCreate
+from database import new_session
 
 
 class UserRepository:

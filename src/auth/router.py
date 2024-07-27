@@ -1,19 +1,26 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from src.auth.repository import UserRepository
-from src.auth.jwt import generate_token_pair
-from src.auth.schemas import SUserCreate, SUser, TokenPair
-from src.auth.auth import get_password_hash, authenticate_user, get_current_user
-from src.config import settings
+from sqlalchemy.exc import IntegrityError
+
+from auth.repository import UserRepository
+from auth.jwt import generate_token_pair
+from auth.schemas import SUserCreate, SUser, TokenPair
+from auth.auth import get_password_hash, authenticate_user, get_current_user
+from config import settings
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/register", response_model=TokenPair)
-async def register_user(response: Response, user: SUserCreate = Depends()) -> TokenPair:
+async def register_user(response: Response, user: SUserCreate) -> TokenPair:
     user.hashed_password = get_password_hash(user.password)
-    user_model = await UserRepository.create_user(user)
+
+    try:
+        user_model = await UserRepository.create_user(user)
+    except IntegrityError:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="User already exists")
+
     user_schema = SUser.model_validate(user_model.__dict__)
     token_pair: TokenPair = generate_token_pair(user_schema)
     response.set_cookie(

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.file_manager import read_file
+from file_manager import read_file
 from starlette.responses import FileResponse
 
 router = APIRouter(tags=["Files"])

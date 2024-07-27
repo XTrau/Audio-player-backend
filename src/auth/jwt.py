@@ -3,8 +3,8 @@ from os import access
 
 import jwt
 
-from src.config import settings
-from src.auth.schemas import SUser, TokenPair
+from config import settings
+from auth.schemas import SUser, TokenPair
 
 
 def encode_jwt(

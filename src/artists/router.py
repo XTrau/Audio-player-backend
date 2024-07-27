@@ -10,8 +10,8 @@ from fastapi import (
     status,
     Query,
 )
-from src.artists.repository import ArtistsRepository
-from src.schemas import SArtistAdd, SArtist
+from artists.repository import ArtistsRepository
+from schemas import SArtistAdd, SArtist
 
 router = APIRouter(prefix="/artists", tags=["Artists"])
 

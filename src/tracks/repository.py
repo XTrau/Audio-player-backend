@@ -3,12 +3,12 @@ from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload, joinedload
 from starlette import status
 
-from src.database import new_session
-from src.schemas import STrackAdd
-from src.file_manager import save_file, delete_file
+from database import new_session
+from schemas import STrackAdd
+from file_manager import save_file, delete_file
 
-from src.models import ArtistTrackOrm
-from src.tracks.models import TrackOrm
+from models import ArtistTrackOrm
+from tracks.models import TrackOrm
 
 
 class TracksRepository:
