@@ -113,3 +113,11 @@ async def get_current_active_user(
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+async def get_super_user(
+    current_user: SUser = Depends(get_current_active_user),
+):
+    if current_user.is_superuser:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user

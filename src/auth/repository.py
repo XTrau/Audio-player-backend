@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert
 from auth.models import UserOrm
 from auth.schemas import SUserCreate
 from database import new_session
@@ -14,14 +14,13 @@ class UserRepository:
             return user
 
     @staticmethod
-    async def create_user(user: SUserCreate):
+    async def create_user(user: SUserCreate, hashed_password: str):
         async with new_session() as session:
-            user_model = UserOrm(
+            stmt = insert(UserOrm).values(
                 username=user.username,
                 email=user.email,
-                hashed_password=user.hashed_password,
+                hashed_password=hashed_password,
             )
-            session.add(user_model)
-            await session.flush()
+            await session.execute(stmt)
             await session.commit()
-            return user_model
+            return await UserRepository.get_user_by_email(user.email)

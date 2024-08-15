@@ -47,7 +47,10 @@ async def get_tracks(
     size: int = Query(10, ge=1, le=20),
 ):
     track_models = await TracksRepository.get_tracks(page, size)
-    track_schemas = [STrack.model_validate(track_model, from_attributes=True) for track_model in track_models]
+    track_schemas = [
+        STrack.model_validate(track_model, from_attributes=True)
+        for track_model in track_models
+    ]
     return track_schemas
 
 

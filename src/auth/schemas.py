@@ -11,7 +11,6 @@ class SUserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
-    hashed_password: str | None = None
 
 
 class SUser(BaseModel):
@@ -19,6 +18,7 @@ class SUser(BaseModel):
     email: EmailStr
     disabled: bool = False
     is_verified: bool = False
+    is_superuser: bool = False
 
 
 class SUserInDB(SUser):

@@ -8,20 +8,19 @@ from auth.schemas import SUserCreate, SUser, TokenPair
 from auth.auth import get_password_hash, authenticate_user, get_current_user
 from config import settings
 
-
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/register", response_model=TokenPair)
 async def register_user(response: Response, user: SUserCreate) -> TokenPair:
-    user.hashed_password = get_password_hash(user.password)
+    hashed_password = get_password_hash(user.password)
 
     try:
-        user_model = await UserRepository.create_user(user)
+        user_model = await UserRepository.create_user(user, hashed_password)
     except IntegrityError:
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail="User already exists")
 
-    user_schema = SUser.model_validate(user_model.__dict__)
+    user_schema = SUser.model_validate(user_model, from_attributes=True)
     token_pair: TokenPair = generate_token_pair(user_schema)
     response.set_cookie(
         settings.jwt.access_token_type,

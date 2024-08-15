@@ -17,8 +17,8 @@ router = APIRouter(prefix="/artists", tags=["Artists"])
 
 
 async def get_artist_create_schema(
-    name: str = Form(),
-    image_file: Optional[UploadFile] = File(default=None),
+        name: str = Form(),
+        image_file: Optional[UploadFile] = File(default=None),
 ) -> SArtistAdd:
     return SArtistAdd(name=name, image_file=image_file)
 
@@ -31,8 +31,8 @@ async def create_artist(artist: SArtistAdd = Depends(get_artist_create_schema)):
 
 @router.get("/", response_model=list[SArtist])
 async def get_artists(
-    page: int = Query(0, ge=0),
-    size: int = Query(10, ge=1, le=20),
+        page: int = Query(0, ge=0),
+        size: int = Query(10, ge=1, le=20),
 ):
     artist_models = await ArtistsRepository.get_artists(page, size)
     artist_schemas = [
@@ -55,8 +55,8 @@ async def get_artist(artist_id: int):
 
 @router.put("/{artist_id}", response_model=SArtist)
 async def update_artist(
-    artist_id: int,
-    artist: SArtistAdd = Depends(get_artist_create_schema),
+        artist_id: int,
+        artist: SArtistAdd = Depends(get_artist_create_schema),
 ):
     await ArtistsRepository.update_artist(artist_id, artist)
     artist_model = await ArtistsRepository.get_artist(artist_id)
