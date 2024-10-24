@@ -1,26 +1,42 @@
-from pydantic import BaseModel, EmailStr
-
-
-class TokenPair(BaseModel):
-    access_token: str
-    refresh_token: str
-    type: str = "Bearer"
+from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic_core.core_schema import FieldValidationInfo
 
 
 class SUserCreate(BaseModel):
-    username: str
     email: EmailStr
+    username: str
+    password: str = Field(min_length=8, max_length=32)
+
+    @classmethod
+    @field_validator("username", mode="before")
+    def username_alphanumeric(cls, value: str):
+        if not value.isalnum():
+            raise ValueError(
+                "Username пользователя может содержать только символы английского алфавита и цифры"
+            )
+        if not 5 <= len(value) <= 32:
+            raise ValueError(
+                "Минимальная длина поля username 5 символов, максимальная - 32 символа"
+            )
+        return value
+
+
+class SUserLogin(BaseModel):
+    login: str
     password: str
 
 
 class SUser(BaseModel):
     username: str
     email: EmailStr
-    disabled: bool = False
-    is_verified: bool = False
-    is_superuser: bool = False
+    is_admin: bool
 
 
 class SUserInDB(SUser):
     id: int
     hashed_password: str
+
+
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str

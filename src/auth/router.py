@@ -1,68 +1,52 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from datetime import datetime, UTC
 
-from sqlalchemy.exc import IntegrityError
+from asyncpg.pgproto.pgproto import timedelta
+from fastapi import APIRouter, Response, Depends, status, HTTPException
 
-from auth.repository import UserRepository
-from auth.jwt import generate_token_pair
-from auth.schemas import SUserCreate, SUser, TokenPair
-from auth.auth import get_password_hash, authenticate_user, get_current_user
+from auth.auth import register_user, login_user, get_current_user
+from auth.schemas import SUserCreate, SUserLogin, SUserInDB, TokenPair, SUser
 from config import settings
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(tags=["Auth"])
 
 
-@router.post("/register", response_model=TokenPair)
-async def register_user(response: Response, user: SUserCreate) -> TokenPair:
-    hashed_password = get_password_hash(user.password)
-
-    try:
-        user_model = await UserRepository.create_user(user, hashed_password)
-    except IntegrityError:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="User already exists")
-
-    user_schema = SUser.model_validate(user_model, from_attributes=True)
-    token_pair: TokenPair = generate_token_pair(user_schema)
-    response.set_cookie(
-        settings.jwt.access_token_type,
-        token_pair.access_token,
-        httponly=True,
-        max_age=settings.jwt.access_token_expire_seconds,
-    )
-    response.set_cookie(
-        settings.jwt.refresh_token_type,
-        token_pair.refresh_token,
-        httponly=True,
-        max_age=settings.jwt.refresh_token_expire_seconds,
-    )
-    return token_pair
-
-
-@router.post("/login", response_model=TokenPair)
-async def login_user(
-    response: Response, user: SUser = Depends(authenticate_user)
-) -> TokenPair:
-    token_pair: TokenPair = generate_token_pair(user)
-    response.set_cookie(
-        settings.jwt.access_token_type,
-        token_pair.access_token,
-        httponly=True,
-        max_age=settings.jwt.access_token_expire_seconds,
-    )
-    response.set_cookie(
-        settings.jwt.refresh_token_type,
-        token_pair.refresh_token,
-        httponly=True,
-        max_age=settings.jwt.refresh_token_expire_seconds,
-    )
-    return token_pair
-
-
-@router.post("/logout")
-async def logout_user(response: Response):
-    response.delete_cookie(settings.jwt.access_token_type)
-    response.delete_cookie(settings.jwt.refresh_token_type)
-
-
-@router.get("/me", response_model=SUser)
-async def get_me(user: SUser = Depends(get_current_user)) -> SUser:
+@router.post("/register")
+async def register(
+        user: SUserInDB = Depends(register_user),
+):
     return user
+
+
+@router.post("/login", status_code=status.HTTP_204_NO_CONTENT)
+async def login(
+        response: Response,
+        token_pair: TokenPair = Depends(login_user)
+):
+    response.set_cookie(
+        settings.jwt.ACCESS_TOKEN_NAME,
+        token_pair.access_token,
+        expires=datetime.now(UTC) + timedelta(minutes=settings.jwt.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    response.set_cookie(
+        settings.jwt.REFRESH_TOKEN_NAME,
+        token_pair.refresh_token,
+        expires=datetime.now(UTC) + timedelta(days=settings.jwt.REFRESH_TOKEN_EXPIRE_DAYS)
+    )
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return response
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(response: Response):
+    response.delete_cookie(key=settings.jwt.ACCESS_TOKEN_NAME)
+    response.delete_cookie(key=settings.jwt.REFRESH_TOKEN_NAME)
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return response
+
+
+@router.get("/me", response_model=SUser, status_code=status.HTTP_200_OK)
+async def get_user(
+        user: SUserInDB = Depends(get_current_user),
+) -> SUser:
+    user_schema: SUser = SUser.model_validate(user, from_attributes=True)
+    return user_schema

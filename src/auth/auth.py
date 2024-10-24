@@ -1,123 +1,132 @@
-import jwt
-from fastapi import Depends, Request, HTTPException, Response, status
+from fastapi import Depends, HTTPException, Request, Body
+from starlette import status
+
+from jwt import exceptions
+
+from auth.models import UserOrm
+from auth.repository import UserRepository, get_user_repository
+from auth.schemas import SUserCreate, SUser, SUserInDB, SUserLogin, TokenPair
+
+from auth.jwt import create_token_pair, decode_jwt, create_access_token
+
 from passlib.context import CryptContext
-
-from auth.schemas import SUserInDB, SUser
-from auth.repository import UserRepository
-from auth.jwt import (
-    create_access_token,
-    decode_jwt,
-)
-
-from jwt.exceptions import ExpiredSignatureError
 
 from config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated=["auto"])
+pwd_context = CryptContext(schemes=["bcrypt"])
 
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password):
+def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-async def get_user(email: str) -> SUserInDB:
-    user_model = await UserRepository.get_user_by_email(email)
-    if user_model is None:
+def check_password(password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(password, hashed_password)
+
+
+async def register_user(
+    user: SUserCreate = Body(),
+    user_repository: UserRepository = Depends(get_user_repository),
+):
+    user_in_db_email: UserOrm = await user_repository.find_by_email(user.email)
+    user_in_db_username: UserOrm = await user_repository.find_by_username(user.username)
+    if user_in_db_email is not None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Пользователь с таким email уже существует",
         )
-    return SUserInDB.model_validate(user_model, from_attributes=True)
+    if user_in_db_username is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Пользователь с таким username уже существует",
+        )
+    hashed_password = hash_password(user.password)
+    user_model = await user_repository.create(user, hashed_password)
+    user_schema = SUser.model_validate(user_model, from_attributes=True)
+    return user_schema
 
 
-async def authenticate_user(email: str, password: str) -> SUser:
-    user = await get_user(email)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return SUser.model_validate(user, from_attributes=True)
+async def login_user(
+    user: SUserLogin = Body(),
+    user_repository: UserRepository = Depends(get_user_repository),
+) -> TokenPair:
+    user_model = await user_repository.find_by_email(user.login)
+    if user_model is None:
+        user_model = await user_repository.find_by_username(user.login)
+
+    if user_model is None or not check_password(
+        user.password, user_model.hashed_password
+    ):
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, detail="Неправильный логин или пароль"
+        )
+
+    access_token_payload = {"email": user_model.email}
+    refresh_token_payload = {"email": user_model.email}
+
+    return create_token_pair(
+        access_token_payload=access_token_payload,
+        refresh_token_payload=refresh_token_payload,
+    )
 
 
-credentials_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-)
-
-
-async def get_refresh_token_data(request: Request) -> dict:
-    token = request.cookies.get(settings.jwt.refresh_token_type)
-    if token is None:
-        raise credentials_exception
-    try:
-        decoded_data = decode_jwt(token=token)
-    except jwt.InvalidTokenError:
-        raise credentials_exception
-    return decoded_data
-
-
-async def get_access_token_data(
-    response: Response,
+async def get_refresh_token(
     request: Request,
-    refresh_token_data: dict = Depends(get_refresh_token_data),
-) -> dict:
-    async def generate_and_set_access_token() -> str:
-        email = refresh_token_data.get("sub")
-        if email in None:
-            raise credentials_exception
-        user = await get_user(email)
-        if user is None:
-            raise credentials_exception
-        token = create_access_token(user)
-        response.set_cookie(
-            settings.jwt.access_token_type,
-            token,
-            httponly=True,
-            max_age=settings.jwt.access_token_expire_seconds,
+) -> str:
+    refresh_token = request.cookies.get(settings.jwt.REFRESH_TOKEN_NAME)
+    if refresh_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Пользователь неавторизован",
         )
-        return token
-
-    token = request.cookies.get(settings.jwt.access_token_type)
-    if token is None:
-        token = await generate_and_set_access_token()
-
     try:
-        payload = decode_jwt(token)
-    except jwt.InvalidTokenError as e:
-        if isinstance(e, ExpiredSignatureError):
-            token = await generate_and_set_access_token()
-            return decode_jwt(token)
-        raise credentials_exception
-    else:
-        return payload
+        refresh_token_payload = decode_jwt(token=refresh_token)
+    except exceptions.InvalidTokenError or exceptions.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Пользователь неавторизован",
+        )
+    return refresh_token
+
+
+async def get_access_token(
+    request: Request,
+    refresh_token: str = Depends(get_refresh_token),
+) -> str:
+    access_token: str | None = request.cookies.get(settings.jwt.ACCESS_TOKEN_NAME)
+    if access_token is None:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, detail="Пользователь неавторизован"
+        )
+    try:
+        access_token_payload: dict = decode_jwt(token=access_token)
+    except exceptions.InvalidTokenError or exceptions.ExpiredSignatureError:
+        refresh_token_payload: dict = decode_jwt(token=refresh_token)
+        payload: dict = refresh_token_payload.get("sub")
+        email: str = payload.get("email")
+        access_token_payload: dict = {"email": email}
+        access_token: str = create_access_token(access_token_payload)
+    return access_token
 
 
 async def get_current_user(
-    access_token_data: dict = Depends(get_access_token_data),
-) -> SUser:
-    email = access_token_data.get("sub")
-    if email is None:
-        raise credentials_exception
-    user = await get_user(email)
-    if user is None:
-        raise credentials_exception
-    return SUser.model_validate(user, from_attributes=True)
+    access_token: str = Depends(get_access_token),
+    user_repository: UserRepository = Depends(get_user_repository),
+) -> SUserInDB:
+    access_token_payload: dict = decode_jwt(token=access_token)
+    payload: dict = access_token_payload.get("sub")
+    email: str = payload.get("email")
+    user_model: UserOrm = await user_repository.find_by_email(email)
+    user_schema: SUserInDB = SUserInDB.model_validate(user_model, from_attributes=True)
+    return user_schema
 
 
-async def get_current_active_user(
-    current_user: SUser = Depends(get_current_user),
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
-
-async def get_super_user(
-    current_user: SUser = Depends(get_current_active_user),
-):
-    if current_user.is_superuser:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+async def get_current_administrator_user(
+    user: SUserInDB = Depends(get_current_user),
+) -> SUserInDB:
+    if user.is_admin is True:
+        return user
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="У пользователя недостаточно прав",
+    )
