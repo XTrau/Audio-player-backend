@@ -46,6 +46,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=allow_headers,
+    allow_credentials=True
 )
 
 
