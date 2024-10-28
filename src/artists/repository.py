@@ -45,7 +45,7 @@ class ArtistsRepository:
     @staticmethod
     async def search_artists(query: str) -> list[ArtistOrm]:
         async with new_session() as session:
-            threshold = 0.5
+            threshold = 0.4
             query = (
                 select(ArtistOrm)
                 .filter(func.similarity(ArtistOrm.name, query) > threshold)

@@ -128,6 +128,7 @@ async def get_current_user(
     email: str = payload.get("email")
 
     user_model: UserOrm = await user_repository.find_by_email(email)
+    if user_model is None: raise UNAUTHORIZED_USER_EXCEPTION
     return SUserInDB.model_validate(user_model, from_attributes=True)
 
 
