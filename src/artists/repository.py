@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.orm import selectinload, joinedload
 from starlette import status
 
@@ -39,8 +39,22 @@ class ArtistsRepository:
                 .offset(page * size)
             )
             res = await session.execute(query)
-            artists = res.unique().scalars().all()
-            return artists
+            artist_models = res.unique().scalars().all()
+            return artist_models
+
+    @staticmethod
+    async def search_artists(query: str) -> list[ArtistOrm]:
+        async with new_session() as session:
+            threshold = 0.5
+            query = (
+                select(ArtistOrm)
+                .filter(func.similarity(ArtistOrm.name, query) > threshold)
+                .limit(10)
+                .order_by(func.similarity(ArtistOrm.name, query).desc())
+            )
+            result = await session.execute(query)
+            artist_models = result.unique().scalars().all()
+            return artist_models
 
     @staticmethod
     async def get_artist(artist_id: int) -> ArtistOrm | None:

@@ -30,3 +30,11 @@ docker-compose up --build -d
 ```
 
 This command starts the backend with new created database on your machine (backend port - 8000, database port - 5432)
+
+```
+docker exec -it my_postgres_container psql -U postgres -d my_database
+```
+
+```
+CREATE EXTENSION pg_trgm;
+```
