@@ -15,7 +15,10 @@ class TrackOrm(Base):
         ForeignKey("album.id", ondelete="CASCADE")
     )
 
-    album: Mapped["AlbumOrm"] = relationship(back_populates="tracks")
+    album: Mapped["AlbumOrm"] = relationship(
+        back_populates="tracks"
+    )
     artists: Mapped[list["ArtistOrm"]] = relationship(
-        back_populates="tracks", secondary="artist_track"
+        back_populates="tracks",
+        secondary="artist_track"
     )

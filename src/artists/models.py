@@ -9,7 +9,9 @@ class ArtistOrm(Base):
     name: Mapped[str]
     image_file_name: Mapped[str | None]
 
-    albums: Mapped[list["AlbumOrm"]] = relationship(back_populates="artist")
+    albums: Mapped[list["AlbumOrm"]] = relationship(
+        back_populates="artists", secondary="artist_album"
+    )
     tracks: Mapped[list["TrackOrm"]] = relationship(
         back_populates="artists", secondary="artist_track"
     )

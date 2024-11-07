@@ -12,3 +12,13 @@ class ArtistTrackOrm(Base):
     track_id: Mapped[int] = mapped_column(
         ForeignKey("track.id", ondelete="CASCADE"), primary_key=True
     )
+
+class ArtistAlbumOrm(Base):
+    __tablename__ = "artist_album"
+
+    artist_id: Mapped[int] = mapped_column(
+        ForeignKey("artist.id", ondelete="CASCADE"), primary_key=True
+    )
+    album_id: Mapped[int] = mapped_column(
+        ForeignKey("album.id", ondelete="CASCADE"), primary_key=True
+    )

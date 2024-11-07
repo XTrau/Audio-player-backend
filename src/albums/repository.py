@@ -13,7 +13,7 @@ from tracks.models import TrackOrm
 
 class AlbumsRepository:
     @staticmethod
-    async def create_album(album: SAlbumAdd) -> int:
+    async def create_album(album: SAlbumAdd) -> AlbumOrm:
         async with new_session() as session:
             image_file_name = await save_file(
                 album.image_file, ["jpg", "jpeg", "png"], album.title
@@ -26,7 +26,7 @@ class AlbumsRepository:
             session.add(album_model)
             await session.flush()
             await session.commit()
-            return album_model.id
+            return album_model
 
     @staticmethod
     async def get_albums(page: int, size: int) -> list[AlbumOrm]:
@@ -34,7 +34,7 @@ class AlbumsRepository:
             query = (
                 select(AlbumOrm)
                 .options(
-                    joinedload(AlbumOrm.artist),
+                    selectinload(AlbumOrm.artists),
                     selectinload(AlbumOrm.tracks).selectinload(TrackOrm.artists),
                 )
                 .limit(size)
@@ -50,7 +50,7 @@ class AlbumsRepository:
             query = (
                 select(AlbumOrm)
                 .options(
-                    joinedload(AlbumOrm.artist),
+                    selectinload(AlbumOrm.artists),
                     selectinload(AlbumOrm.tracks).selectinload(TrackOrm.artists),
                 )
                 .where(AlbumOrm.id == album_id)
@@ -60,7 +60,7 @@ class AlbumsRepository:
             return album_models
 
     @staticmethod
-    async def update_album(album_id: int, album: SAlbumAdd):
+    async def update_album(album_id: int, album: SAlbumAdd) -> AlbumOrm:
         async with new_session() as session:
             query = select(AlbumOrm).where(AlbumOrm.id == album_id)
 
@@ -84,7 +84,9 @@ class AlbumsRepository:
                     artist_id=album.artist_id,
                     image_file_name=image_file_name,
                 )
+                .returning(AlbumOrm)
             )
 
-            await session.execute(stmt)
+            updated_album = await session.execute(stmt)
             await session.commit()
+            return updated_album

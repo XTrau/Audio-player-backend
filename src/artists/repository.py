@@ -13,7 +13,7 @@ from tracks.models import TrackOrm
 
 class ArtistsRepository:
     @staticmethod
-    async def create_artist(artist: SArtistAdd) -> int:
+    async def create_artist(artist: SArtistAdd) -> ArtistOrm:
         async with new_session() as session:
             img_file_name = await save_file(
                 artist.image_file, ["jpg", "jpeg", "png"], artist.name
@@ -22,7 +22,7 @@ class ArtistsRepository:
             session.add(artist_model)
             await session.flush()
             await session.commit()
-            return artist_model.id
+            return artist_model
 
     @staticmethod
     async def get_artists(page: int, size: int) -> list[ArtistOrm]:
@@ -57,7 +57,7 @@ class ArtistsRepository:
             return artist_models
 
     @staticmethod
-    async def get_artist(artist_id: int) -> ArtistOrm | None:
+    async def get_artist(artist_id: int) -> ArtistOrm:
         async with new_session() as session:
             query = (
                 select(ArtistOrm)
@@ -74,7 +74,7 @@ class ArtistsRepository:
             return artist_model
 
     @staticmethod
-    async def update_artist(artist_id: int, artist: SArtistAdd) -> ArtistOrm | None:
+    async def update_artist(artist_id: int, artist: SArtistAdd) -> ArtistOrm:
         async with new_session() as session:
             query = select(ArtistOrm).where(ArtistOrm.id == artist_id)
 
@@ -82,7 +82,8 @@ class ArtistsRepository:
             old_artist = res.scalar()
             if old_artist is None:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="Artist not found"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Артист не найден"
                 )
 
             await delete_file(old_artist.image_file_name)
@@ -95,7 +96,9 @@ class ArtistsRepository:
                 update(ArtistOrm)
                 .where(ArtistOrm.id == artist_id)
                 .values(name=artist.name, image_file_name=image_file_name)
+                .returning(ArtistOrm)
             )
 
-            await session.execute(stmt)
+            updated_artist = await session.execute(stmt)
             await session.commit()
+            return updated_artist
