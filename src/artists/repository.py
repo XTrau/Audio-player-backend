@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload, joinedload
 from starlette import status
 
 from database import new_session
-from schemas import SArtistAdd
+from artists.schemas import SArtistCreate
 from file_manager import save_file, delete_file
 
 from artists.models import ArtistOrm
@@ -13,7 +13,7 @@ from tracks.models import TrackOrm
 
 class ArtistsRepository:
     @staticmethod
-    async def create_artist(artist: SArtistAdd) -> ArtistOrm:
+    async def create_artist(artist: SArtistCreate) -> ArtistOrm:
         async with new_session() as session:
             img_file_name = await save_file(
                 artist.image_file, ["jpg", "jpeg", "png"], artist.name
@@ -27,25 +27,14 @@ class ArtistsRepository:
     @staticmethod
     async def get_artists(page: int, size: int) -> list[ArtistOrm]:
         async with new_session() as session:
-            query = (
-                select(ArtistOrm)
-                .options(
-                    selectinload(ArtistOrm.albums),
-                    selectinload(ArtistOrm.tracks).options(
-                        selectinload(TrackOrm.artists), joinedload(TrackOrm.album)
-                    ),
-                )
-                .limit(size)
-                .offset(page * size)
-            )
+            query = select(ArtistOrm).limit(size).offset(page * size)
             res = await session.execute(query)
             artist_models = res.unique().scalars().all()
             return artist_models
 
     @staticmethod
-    async def search_artists(query: str) -> list[ArtistOrm]:
+    async def search_artists(query: str, threshold: float) -> list[ArtistOrm]:
         async with new_session() as session:
-            threshold = 0.4
             query = (
                 select(ArtistOrm)
                 .filter(func.similarity(ArtistOrm.name, query) > threshold)
@@ -74,7 +63,7 @@ class ArtistsRepository:
             return artist_model
 
     @staticmethod
-    async def update_artist(artist_id: int, artist: SArtistAdd) -> ArtistOrm:
+    async def update_artist(artist_id: int, artist: SArtistCreate) -> ArtistOrm:
         async with new_session() as session:
             query = select(ArtistOrm).where(ArtistOrm.id == artist_id)
 
@@ -82,8 +71,7 @@ class ArtistsRepository:
             old_artist = res.scalar()
             if old_artist is None:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Артист не найден"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Артист не найден"
                 )
 
             await delete_file(old_artist.image_file_name)
