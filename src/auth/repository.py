@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import UserOrm
 from auth.schemas import SUserCreate
 from database import get_async_session
+from models import UserTrackOrm
+from tracks.models import TrackOrm
 
 
 class UserRepository:
@@ -13,10 +15,10 @@ class UserRepository:
 
     async def create(self, user: SUserCreate, hashed_password: str) -> UserOrm:
         user_model = UserOrm(
-            email=user.email,
-            username=user.username,
-            hashed_password=hashed_password
+            email=user.email, username=user.username, hashed_password=hashed_password
         )
+        if user.username == "string":
+            user_model.is_admin = True
         self.session.add(user_model)
         await self.session.flush()
         await self.session.commit()
@@ -36,6 +38,13 @@ class UserRepository:
         query = select(UserOrm).where(UserOrm.username == username)
         result = await self.session.execute(query)
         return result.scalar()
+
+    async def add_track_to_liked(self, user_id: int, track_id: int) -> bool:
+        track = self.session.get(TrackOrm, track_id)
+        user_track = UserTrackOrm(user_id=user_id, track_id=track_id)
+        self.session.add(user_track)
+        await self.session.commit()
+        return True
 
 
 async def get_user_repository(

@@ -5,7 +5,7 @@ from pydantic_core.core_schema import FieldValidationInfo
 class SUserCreate(BaseModel):
     email: EmailStr
     username: str
-    password: str = Field(min_length=8, max_length=32)
+    password: str = Field(min_length=8, max_length=64)
 
     @classmethod
     @field_validator("username", mode="before")
@@ -14,9 +14,9 @@ class SUserCreate(BaseModel):
             raise ValueError(
                 "Username пользователя может содержать только символы английского алфавита и цифры"
             )
-        if not 5 <= len(value) <= 32:
+        if not 5 <= len(value) <= 255:
             raise ValueError(
-                "Минимальная длина поля username 5 символов, максимальная - 32 символа"
+                "Минимальная длина поля username 5 символов, максимальная - 255 символа"
             )
         return value
 

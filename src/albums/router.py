@@ -15,8 +15,9 @@ from albums.repository import AlbumsRepository
 from albums.schemas import SAlbumCreate, SAlbumWithArtists, SAlbum
 from auth.auth import get_current_administrator_user
 from auth.schemas import SUserInDB
+from schemas import SAlbumFullInfo
 
-router = APIRouter(prefix="/albums", tags=["Albums"])
+router = APIRouter(tags=["Albums"])
 
 
 async def get_album_create_schema(
@@ -76,14 +77,14 @@ async def search_album(query: str, threshold: float = 0.4) -> list[SAlbumWithArt
     return album_schemas
 
 
-@router.get("/{album_id}", response_model=SAlbum, status_code=status.HTTP_200_OK)
-async def get_album(album_id: int) -> SAlbum:
+@router.get("/{album_id}", response_model=SAlbumFullInfo, status_code=status.HTTP_200_OK)
+async def get_album(album_id: int) -> SAlbumFullInfo:
     album_model = await AlbumsRepository.get_album(album_id)
     if album_model is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Альбом не найден"
         )
-    album_schema = SAlbum.model_validate(album_model, from_attributes=True)
+    album_schema = SAlbumFullInfo.model_validate(album_model, from_attributes=True)
     return album_schema
 
 

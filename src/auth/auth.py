@@ -16,7 +16,7 @@ from config import settings
 pwd_context = CryptContext(schemes=["bcrypt"])
 
 UNAUTHORIZED_USER_EXCEPTION = HTTPException(
-    status.HTTP_401_UNAUTHORIZED, detail="Пользователь неавторизован"
+    status.HTTP_401_UNAUTHORIZED, detail="Пользователь не прошел авторизацию"
 )
 
 
@@ -128,7 +128,12 @@ async def get_current_user(
     email: str = payload.get("email")
 
     user_model: UserOrm = await user_repository.find_by_email(email)
-    if user_model is None: raise UNAUTHORIZED_USER_EXCEPTION
+    if user_model is None:
+        raise UNAUTHORIZED_USER_EXCEPTION
+    if user_model.is_banned:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Пользователь заблокирован"
+        )
     return SUserInDB.model_validate(user_model, from_attributes=True)
 
 

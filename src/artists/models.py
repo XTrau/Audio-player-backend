@@ -7,8 +7,8 @@ class ArtistOrm(Base):
     __tablename__ = "artist"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(length=64))
-    image_file_name: Mapped[str | None] = mapped_column(String(length=64))
+    name: Mapped[str] = mapped_column(String(255))
+    image_file_name: Mapped[str | None] = mapped_column(String(255))
 
     albums: Mapped[list["AlbumOrm"]] = relationship(
         back_populates="artists", secondary="artist_album"

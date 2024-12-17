@@ -4,7 +4,7 @@ from asyncpg.pgproto.pgproto import timedelta
 from fastapi import APIRouter, Response, Depends, status, HTTPException
 
 from auth.auth import register_user, login_user, get_current_user, refresh_token_pair
-from auth.schemas import SUserCreate, SUserLogin, SUserInDB, TokenPair, SUser
+from auth.schemas import SUserInDB, TokenPair, SUser
 from config import settings
 
 router = APIRouter(tags=["Auth"])

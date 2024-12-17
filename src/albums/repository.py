@@ -31,6 +31,7 @@ class AlbumsRepository:
             session.add(album_model)
             await session.flush()
             await session.commit()
+            album_model.track_count = 0
             return album_model
 
     @staticmethod
@@ -77,16 +78,18 @@ class AlbumsRepository:
         async with new_session() as session:
             query = (
                 select(AlbumOrm)
-                .where(AlbumOrm.released_at <= datetime.utcnow())
+                .where(
+                    AlbumOrm.id == album_id
+                    and AlbumOrm.released_at <= datetime.utcnow()
+                )
                 .options(
                     selectinload(AlbumOrm.artists),
-                    selectinload(AlbumOrm.tracks).selectinload(TrackOrm.artists),
+                    joinedload(AlbumOrm.tracks).options(selectinload(TrackOrm.artists)),
                 )
-                .where(AlbumOrm.id == album_id)
             )
             res = await session.execute(query)
-            album_models = res.unique().scalars().first()
-            return album_models
+            album_model = res.unique().scalars().first()
+            return album_model
 
     @staticmethod
     async def search_albums(query: str, threshold: float) -> list[AlbumOrm]:

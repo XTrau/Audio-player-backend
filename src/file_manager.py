@@ -23,7 +23,7 @@ async def save_file(
         )
 
     file_id = str(uuid4())
-    file_name = f"{file_id}_{title}.{file_extension}"
+    file_name = f"{file_id}_{title.replace(' ', '_').replace('\"', '_')}.{file_extension}"
     file_location = os.path.join(UPLOAD_DIRECTORY, file_name)
     with open(file_location, "wb") as f:
         f.write(file.file.read())

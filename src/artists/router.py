@@ -16,7 +16,7 @@ from schemas import SArtistFullInfo
 from auth.auth import get_current_administrator_user
 from auth.schemas import SUserInDB
 
-router = APIRouter(prefix="/artists", tags=["Artists"])
+router = APIRouter(tags=["Artists"])
 
 
 async def get_artist_create_schema(
