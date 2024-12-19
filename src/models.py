@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import ForeignKey
 
 
@@ -48,6 +48,9 @@ class UserTrackOrm(Base):
         ForeignKey("track.id", ondelete="CASCADE"), primary_key=True
     )
 
+    track: Mapped["TrackOrm"] = relationship("TrackOrm", back_populates="liked_by")
+
+
 class UserPlaylistOrm(Base):
     __tablename__ = "liked_playlists"
 
@@ -58,4 +61,3 @@ class UserPlaylistOrm(Base):
     track_id: Mapped[int] = mapped_column(
         ForeignKey("playlist.id", ondelete="CASCADE"), primary_key=True
     )
-

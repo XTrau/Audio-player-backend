@@ -18,7 +18,9 @@ async def register(
 
 
 @router.post("/login", status_code=status.HTTP_204_NO_CONTENT)
-async def login(response: Response, token_pair: TokenPair = Depends(login_user)):
+async def login(
+    response: Response, token_pair: TokenPair = Depends(login_user)
+) -> Response:
     response.set_cookie(
         settings.jwt.ACCESS_TOKEN_NAME,
         token_pair.access_token,
@@ -36,7 +38,7 @@ async def login(response: Response, token_pair: TokenPair = Depends(login_user))
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(response: Response):
+async def logout(response: Response) -> Response:
     response.delete_cookie(key=settings.jwt.ACCESS_TOKEN_NAME)
     response.delete_cookie(key=settings.jwt.REFRESH_TOKEN_NAME)
     response.status_code = status.HTTP_204_NO_CONTENT
@@ -46,7 +48,7 @@ async def logout(response: Response):
 @router.get("/refresh", status_code=status.HTTP_204_NO_CONTENT)
 async def refresh_tokens(
     response: Response, new_token_pair: TokenPair = Depends(refresh_token_pair)
-):
+) -> Response:
     response.set_cookie(
         settings.jwt.ACCESS_TOKEN_NAME,
         new_token_pair.access_token,

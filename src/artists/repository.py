@@ -1,7 +1,5 @@
-from fastapi import HTTPException
 from sqlalchemy import select, update, func
 from sqlalchemy.orm import selectinload, joinedload
-from starlette import status
 
 from database import new_session
 from artists.schemas import SArtistCreate
@@ -65,21 +63,13 @@ class ArtistsRepository:
     @staticmethod
     async def update_artist(artist_id: int, artist: SArtistCreate) -> ArtistOrm:
         async with new_session() as session:
-            query = select(ArtistOrm).where(ArtistOrm.id == artist_id)
-
-            res = await session.execute(query)
-            old_artist = res.scalar()
-            if old_artist is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="Артист не найден"
-                )
-
-            await delete_file(old_artist.image_file_name)
+            query = select(ArtistOrm.image_file_name).where(ArtistOrm.id == artist_id)
+            old_image_file_name = (await session.execute(query)).scalar()
+            await delete_file(old_image_file_name)
 
             image_file_name = await save_file(
                 artist.image_file, ["jpg", "jpeg", "png"], artist.name
             )
-
             stmt = (
                 update(ArtistOrm)
                 .where(ArtistOrm.id == artist_id)
@@ -89,4 +79,21 @@ class ArtistsRepository:
 
             updated_artist = await session.execute(stmt)
             await session.commit()
-            return updated_artist
+            return updated_artist.scalar()
+
+    @staticmethod
+    async def check_artist(artist_id: int) -> bool:
+        async with new_session() as session:
+            query = select(ArtistOrm).where(ArtistOrm.id == artist_id)
+            artist_model = (await session.execute(query)).scalar()
+        return False if not artist_model else True
+
+    @staticmethod
+    async def check_artists(artist_ids: list[int]) -> bool:
+        async with new_session() as session:
+            for artist_id in artist_ids:
+                query = select(ArtistOrm).where(ArtistOrm.id == artist_id)
+                artist_model = (await session.execute(query)).scalar()
+                if not artist_model:
+                    return False
+        return True

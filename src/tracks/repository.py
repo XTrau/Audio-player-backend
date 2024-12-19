@@ -4,6 +4,7 @@ from sqlalchemy.orm import selectinload, joinedload
 from starlette import status
 
 from database import new_session
+from playlist.repository import track_not_found_exception
 from tracks.schemas import STrackCreate
 from file_manager import save_file, delete_file
 
@@ -22,7 +23,7 @@ class TracksRepository:
                 .offset(page * size)
             )
             res = await session.execute(query)
-            track_models = res.unique().scalars().all()
+            track_models: list[TrackOrm] = res.unique().scalars().all()
             return track_models
 
     @staticmethod
@@ -34,17 +35,17 @@ class TracksRepository:
                 .options(joinedload(TrackOrm.album), selectinload(TrackOrm.artists))
             )
             res = await session.execute(query)
-            track_model = res.unique().scalars().first()
+            track_model: TrackOrm = res.unique().scalars().first()
             return track_model
 
     @staticmethod
     async def create_track(track: STrackCreate):
         async with new_session() as session:
             try:
-                audio_file_name = await save_file(
+                audio_file_name: str = await save_file(
                     track.audio_file, ["mp3", "wav"], track.title
                 )
-                image_file_name = await save_file(
+                image_file_name: str | None = await save_file(
                     track.image_file, ["jpg", "jpeg", "png"], track.title
                 )
 
@@ -60,7 +61,7 @@ class TracksRepository:
                     .returning(TrackOrm)
                 )
                 result = await session.execute(stmt)
-                track_model = result.scalar()
+                track_model: TrackOrm = result.scalar()
                 await session.commit()
                 return track_model
             except Exception as e:
@@ -88,10 +89,7 @@ class TracksRepository:
                 old_track = res.scalar()
 
                 if old_track is None:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail="Указанный трек не найден",
-                    )
+                    raise track_not_found_exception
 
                 audio_file_name = await save_file(
                     track.audio_file, ["mp3", "wav"], track.title
@@ -134,19 +132,14 @@ class TracksRepository:
     @staticmethod
     async def delete_track(track_id: int) -> TrackOrm:
         async with new_session() as session:
-            query = select(TrackOrm).where(TrackOrm.id == track_id)
-            result = await session.execute(query)
-            track = result.scalar()
-            if track is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Указанный трек не найден",
-                )
-
-            stmt = delete(ArtistTrackOrm).where(ArtistTrackOrm.track_id == track_id)
-            await session.execute(stmt)
-
             stmt = delete(TrackOrm).where(TrackOrm.id == track_id).returning(TrackOrm)
             result = await session.execute(stmt)
             await session.commit()
             return result.scalar()
+
+    @staticmethod
+    async def check_track(track_id: int) -> bool:
+        async with new_session() as session:
+            query = select(TrackOrm).where(TrackOrm.id == track_id)
+            track_model = (await session.execute(query)).scalar()
+        return False if not track_model else True

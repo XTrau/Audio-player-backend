@@ -20,6 +20,10 @@ class TrackOrm(Base):
         back_populates="tracks", secondary="artist_track"
     )
 
+    liked_by: Mapped[list["UserTrackOrm"]] = relationship(
+        "UserTrackOrm", back_populates="track"
+    )
+
 
 async def create_track_triggers():
     create_insert_track_track_function_sql = text(
@@ -86,5 +90,5 @@ async def create_track_triggers():
 
         await session.execute(create_insert_track_trigger_sql)
         await session.execute(create_on_delete_track_trigger_sql)
-        
+
         await session.commit()

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, HTTPException
 
 from auth.auth import get_current_user
 from auth.schemas import SUserInDB
 from schemas import STrackFullInfo
 from liked_tracks.repository import UserLikesRepository
+from tracks.repository import TracksRepository
 
 router = APIRouter(tags=["Liked Tracks"])
 
@@ -15,12 +16,18 @@ router = APIRouter(tags=["Liked Tracks"])
 async def like_track(
     track_id: int, user: SUserInDB = Depends(get_current_user)
 ) -> None:
+    if not TracksRepository.check_track(track_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Указанный трек не найден"
+        )
     await UserLikesRepository.like_track(user.id, track_id)
 
 
 @router.post(path="/unlike_track", status_code=status.HTTP_200_OK, response_model=None)
 async def unlike_track(
-    track_id: int, user: SUserInDB = Depends(get_current_user)
+    track_id: int,
+    user: SUserInDB = Depends(get_current_user)
 ) -> None:
     await UserLikesRepository.unlike_track(user.id, track_id)
 

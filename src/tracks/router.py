@@ -6,12 +6,13 @@ from fastapi import (
     Depends,
     status,
     Query,
-    HTTPException,
 )
 
-from albums.repository import AlbumsRepository
+from artists.exceptions import artist_not_found_exception
+from artists.repository import ArtistsRepository
 from auth.auth import get_current_administrator_user
 from auth.schemas import SUserInDB
+from playlist.repository import track_not_found_exception
 from schemas import STrackFullInfo
 from tracks.models import TrackOrm
 from tracks.schemas import STrack, STrackCreate
@@ -43,13 +44,9 @@ async def create_track(
     track: STrackCreate = Depends(get_track_create_schema),
     admin: SUserInDB = Depends(get_current_administrator_user),
 ):
-    check_artists = await AlbumsRepository.check_artists(track.artist_ids)
+    check_artists = await ArtistsRepository.check_artists(track.artist_ids)
     if not check_artists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Указанных артистов не существует",
-        )
-
+        raise artist_not_found_exception
     track_model = await TracksRepository.create_track(track)
     await TracksRepository.set_artists(track_model.id, track.artist_ids)
     return STrack.model_validate(track_model, from_attributes=True)
@@ -74,9 +71,7 @@ async def get_tracks(
 async def get_track(track_id: int) -> STrackFullInfo:
     track_model = await TracksRepository.get_track(track_id)
     if track_model is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Указанный трек не найден"
-        )
+        raise track_not_found_exception
     track_schema = STrackFullInfo.model_validate(track_model, from_attributes=True)
     return track_schema
 
@@ -85,20 +80,15 @@ async def get_track(track_id: int) -> STrackFullInfo:
 async def update_track(
     track_id: int, track: STrackCreate = Depends(get_track_create_schema)
 ):
-    check_artists = await AlbumsRepository.check_artists(track.artist_ids)
+    check_artists: bool = await ArtistsRepository.check_artists(track.artist_ids)
     if not check_artists:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Указанных артистов не существует",
-        )
+        raise artist_not_found_exception
 
     await TracksRepository.update_track(track_id, track)
-    track_model = await TracksRepository.get_track(track_id)
+    track_model: TrackOrm = await TracksRepository.get_track(track_id)
     if track_model is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Указанный трек не найден"
-        )
-    track_schema = STrack.model_validate(track_model, from_attributes=True)
+        raise track_not_found_exception
+    track_schema: STrack = STrack.model_validate(track_model, from_attributes=True)
     return track_schema
 
 
@@ -107,5 +97,9 @@ async def delete_track(
     track_id: int,
     admin: SUserInDB = Depends(get_current_administrator_user),
 ):
+    check_track: bool = await TracksRepository.check_track(track_id)
+    if not check_track:
+        raise track_not_found_exception
+
     track: TrackOrm = await TracksRepository.delete_track(track_id)
     return track

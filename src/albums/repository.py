@@ -1,18 +1,16 @@
-from datetime import datetime
-
-from fastapi import HTTPException
+from database import new_session
 from sqlalchemy import select, update, delete, func
 from sqlalchemy.orm import joinedload, selectinload
-from starlette import status
 
-from artists.models import ArtistOrm
-from database import new_session
-from models import ArtistAlbumOrm
-from albums.schemas import SAlbumCreate
 from file_manager import save_file, delete_file
 
+from models import ArtistAlbumOrm
 from albums.models import AlbumOrm
 from tracks.models import TrackOrm
+
+from albums.schemas import SAlbumCreate
+
+from datetime import datetime
 
 
 class AlbumsRepository:
@@ -33,16 +31,6 @@ class AlbumsRepository:
             await session.commit()
             album_model.track_count = 0
             return album_model
-
-    @staticmethod
-    async def check_artists(artist_ids: list[int]) -> bool:
-        async with new_session() as session:
-            for artist_id in artist_ids:
-                query = select(ArtistOrm).where(ArtistOrm.id == artist_id)
-                artist_model = await session.execute(query)
-                if artist_model is None:
-                    return False
-            return True
 
     @staticmethod
     async def set_artists(album_id: int, artist_ids: list[int]) -> None:
@@ -111,20 +99,14 @@ class AlbumsRepository:
     @staticmethod
     async def update_album(album_id: int, album: SAlbumCreate) -> AlbumOrm:
         async with new_session() as session:
-            query = select(AlbumOrm).where(AlbumOrm.id == album_id)
-
-            res = await session.execute(query)
-            old_album = res.scalar()
-            if old_album is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="Альбом не найден"
-                )
-
-            await delete_file(old_album.image_file_name)
-
             image_file_name = await save_file(
                 album.image_file, ["jpg", "jpeg", "png"], album.title
             )
+
+            query = select(AlbumOrm.image_file_name).where(AlbumOrm.id == album_id)
+            old_image_file_name = (await session.execute(query)).scalar()
+            await delete_file(old_image_file_name)
+
             stmt = (
                 update(AlbumOrm)
                 .where(AlbumOrm.id == album_id)
@@ -138,3 +120,10 @@ class AlbumsRepository:
             result = await session.execute(stmt)
             await session.commit()
             return result.scalar()
+
+    @staticmethod
+    async def check_album(album_id: int):
+        async with new_session() as session:
+            query = select(AlbumOrm).where(AlbumOrm.id == album_id)
+            album_model = (await session.execute(query)).scalar()
+        return True if album_model else False
